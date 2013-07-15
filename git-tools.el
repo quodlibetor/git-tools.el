@@ -28,6 +28,11 @@
   "git ls-files -z %s | xargs -0 grep -In %s"
   "The command used for grepping files using git. See `git-tools-grep'.")
 
+;; Run 'code' at the root of the branch which dirname is in.
+(defmacro git-tools-at-branch-root (dirname &rest code)
+  `(let ((default-directory (locate-dominating-file (expand-file-name ,dirname) ".git"))) ,@code))
+
+
 (defun git-tools-grep (expression dirname)
   "Search a branch for `expression'. If there's a C-u prefix, prompt for `dirname'."
   (interactive
@@ -36,6 +41,7 @@
                           (expand-file-name (locate-dominating-file default-directory ".git"))
                         (read-directory-name (format "Search for %s in: " search-string)))))
      (list search-string search-dir)))
-  (grep-find (format git-tools-grep-command
-                     (shell-quote-argument dirname)
-                     (shell-quote-argument expression))))
+  (git-tools-at-branch-root dirname
+   (grep-find (format git-tools-grep-command
+                      (shell-quote-argument dirname)
+                      (shell-quote-argument expression)))))
